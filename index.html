@@ -3,196 +3,44 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vaishnava Community Marketplace — Stage 1 Connectivity Test</title>
-<style>
-  :root{--ink:#30291f;--muted:#766d60;--cream:#f7f3eb;--paper:#fffefa;--line:#e5ddcf;--brown:#79543a;--green:#64765a;--red:#a44;--soft:#eee4d6}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.55 Arial,Helvetica,sans-serif;padding:22px}
-  .wrap{max-width:680px;margin:0 auto}
-  h1{font:bold 26px Georgia,serif;margin:0 0 6px;color:var(--brown)}
-  .sub{color:var(--muted);margin:0 0 22px;font-size:13px}
-  .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:14px}
-  .row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
-  .row:last-child{border-bottom:0}
-  .icon{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:bold;font-size:15px;flex:0 0 auto}
-  .icon.ok{background:#e5efe1;color:var(--green)}
-  .icon.bad{background:#f8e4e4;color:var(--red)}
-  .icon.wait{background:var(--soft);color:var(--brown)}
-  .label{font-weight:bold}
-  .detail{color:var(--muted);font-size:12px;word-break:break-word}
-  code{background:var(--soft);padding:2px 6px;border-radius:4px;font-size:12px}
-  pre{background:#30291f;color:#f7f3eb;padding:12px;border-radius:8px;overflow:auto;font-size:12px}
-  .status{margin-top:22px;padding:16px;border-radius:10px;text-align:center;font-weight:bold}
-  .status.wait{background:var(--soft);color:var(--brown)}
-  .status.ok{background:#e5efe1;color:var(--green)}
-  .status.bad{background:#f8e4e4;color:var(--red)}
-  .input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:13px;margin-top:6px}
-  button{padding:9px 14px;border:0;border-radius:8px;background:var(--brown);color:#fff;font-weight:bold;cursor:pointer;font-size:13px}
-  button:hover{background:#65452f}
-  button:disabled{background:#c9b9a5;cursor:not-allowed}
-</style>
+<title>Vaishnava Community Marketplace</title>
+<link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-<div class="wrap">
-  <h1>Stage 1 — Connectivity Test</h1>
-  <p class="sub">Proves the chain works: browser → Google Apps Script → Google Sheets → browser.</p>
-
-  <div class="card">
-    <label class="label" for="apiUrl">Apps Script Web App URL</label>
-    <div class="detail">Paste the deployment URL ending in <code>/exec</code>. It is stored in your browser only.</div>
-    <input class="input" id="apiUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec">
-    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-      <button id="save">Save URL</button>
-      <button id="run" disabled>Run test</button>
+<header class="top">
+  <div class="wrap topinner">
+    <a href="#/" class="brand">
+      <div class="mark">ॐ</div>
+      <div>
+        <strong>Vaishnava Community</strong>
+        <small>A marketplace for our community</small>
+      </div>
+    </a>
+    <div class="topactions">
+      <a class="btn" href="#/browse">Browse</a>
     </div>
   </div>
-
-  <div class="card" id="results">
-    <div class="row">
-      <div class="icon wait" id="i1">?</div>
-      <div><div class="label">1. Web app deployed</div><div class="detail" id="d1">Not yet checked</div></div>
-    </div>
-    <div class="row">
-      <div class="icon wait" id="i2">?</div>
-      <div><div class="label">2. Ping responds</div><div class="detail" id="d2">Not yet checked</div></div>
-    </div>
-    <div class="row">
-      <div class="icon wait" id="i3">?</div>
-      <div><div class="label">3. Sheet readable</div><div class="detail" id="d3">Not yet checked</div></div>
-    </div>
-    <div class="row">
-      <div class="icon wait" id="i4">?</div>
-      <div><div class="label">4. Schema version matches</div><div class="detail" id="d4">Not yet checked</div></div>
-    </div>
+  <div class="wrap">
+    <nav class="nav" id="nav">
+      <a href="#/" data-path="/">Home</a>
+      <a href="#/browse" data-path="/browse">Browse advertisements</a>
+      <a href="#/browse?cat=property" data-path="/browse">Property</a>
+      <a href="#/browse?cat=services" data-path="/browse">Services</a>
+    </nav>
   </div>
+</header>
 
-  <div class="status wait" id="status">Paste your URL and click "Run test".</div>
-</div>
+<main class="wrap main" id="app"></main>
 
-<script>
-(function () {
-  'use strict';
-  const KEY = 'vc_api_url';
-  const $ = id => document.getElementById(id);
+<footer class="footer">
+  <div class="wrap" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+    <span>Hare Krishna · Community · Connection</span>
+    <span>Sample listings · Demonstration site</span>
+  </div>
+</footer>
 
-  const input = $('apiUrl');
-  const saveBtn = $('save');
-  const runBtn = $('run');
-
-  // Load saved URL
-  const saved = localStorage.getItem(KEY);
-  if (saved) { input.value = saved; runBtn.disabled = false; }
-
-  saveBtn.addEventListener('click', () => {
-    const v = input.value.trim();
-    if (!v) { alert('Paste the Web App URL first.'); return; }
-    if (!/\/exec$/.test(v)) {
-      alert('That URL does not end in /exec. Check you copied the "Web app" deployment, not the "Head" test URL.');
-      return;
-    }
-    localStorage.setItem(KEY, v);
-    runBtn.disabled = false;
-    setStatus('wait', 'URL saved. Click "Run test".');
-    resetRows();
-  });
-
-  runBtn.addEventListener('click', runAll);
-
-  function setRow(n, state, detail) {
-    const icon = $('i' + n);
-    const text = $('d' + n);
-    icon.className = 'icon ' + (state === 'ok' ? 'ok' : state === 'bad' ? 'bad' : 'wait');
-    icon.textContent = state === 'ok' ? '✓' : state === 'bad' ? '✗' : '?';
-    if (detail) text.textContent = detail;
-  }
-
-  function resetRows() {
-    [1, 2, 3, 4].forEach(n => setRow(n, 'wait', 'Not yet checked'));
-  }
-
-  function setStatus(kind, msg) {
-    const el = $('status');
-    el.className = 'status ' + kind;
-    el.textContent = msg;
-  }
-
-  async function fetchJSON(url, opts) {
-    // Apps Script redirects (302) to googleusercontent.com; fetch follows
-    // automatically. We do NOT set Content-Type to application/json on the
-    // POST because that triggers a preflight that Apps Script cannot answer;
-    // text/plain is "simple" and avoids preflight, and Apps Script parses
-    // the JSON body regardless of the declared type.
-    const res = await fetch(url, opts);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    let json;
-    try { json = JSON.parse(text); }
-    catch (e) { throw new Error('Response was not JSON: ' + text.slice(0, 120)); }
-    if (json.body === undefined) throw new Error('Unexpected response shape: ' + text.slice(0, 120));
-    return json.body;
-  }
-
-  async function runAll() {
-    resetRows();
-    setStatus('wait', 'Running tests…');
-    runBtn.disabled = true;
-
-    const base = localStorage.getItem(KEY);
-    try {
-      // Test 1 — ping (also proves deployment + reachability)
-      setRow(1, 'wait', 'Calling ' + base + '?action=ping');
-      const ping = await fetchJSON(base + '?action=ping', { method: 'GET' });
-      if (ping.pong) {
-        setRow(1, 'ok', 'Deployment live — ' + base.split('/s/')[1].slice(0, 12) + '…');
-        setRow(2, 'ok', 'API version ' + ping.api + ' responded at ' + ping.time);
-      } else {
-        setRow(1, 'bad', 'Unexpected response: ' + JSON.stringify(ping));
-        setRow(2, 'bad', '—');
-      }
-
-      // Test 2 — schema read (proves Sheet access)
-      const schema = await fetchJSON(base + '?action=schema', { method: 'GET' });
-      if (schema.ok && schema.version) {
-        setRow(3, 'ok', 'Sheet reachable. Schema version: ' + schema.version);
-        if (schema.version === '1.0.0') {
-          setRow(4, 'ok', 'Matches expected 1.0.0');
-        } else {
-          setRow(4, 'bad', 'Expected 1.0.0 but sheet says "' + schema.version + '"');
-        }
-      } else {
-        setRow(3, 'bad', 'Schema read failed: ' + JSON.stringify(schema));
-        setRow(4, 'bad', '—');
-      }
-
-      // Test 3 — config (proves public config is exposed correctly)
-      const cfg = await fetchJSON(base + '?action=config', { method: 'GET' });
-      if (!cfg.ok) throw new Error('config action failed: ' + JSON.stringify(cfg));
-      if (cfg.config && cfg.config.SPREADSHEET_ID) {
-        // This should never appear — a red flag if it does.
-        setStatus('bad', 'Security warning: SPREADSHEET_ID is exposed in public config! Remove it from publicConfig_().');
-      } else {
-        const ok = [1,2,3,4].every(n => $('i' + n).classList.contains('ok'));
-        setStatus(ok ? 'ok' : 'bad',
-          ok ? '✅ All tests passed. Stage 1 is working end-to-end.'
-             : '⚠️ One or more tests failed. See details above.');
-      }
-    } catch (err) {
-      console.error(err);
-      // If ping failed, mark downstream tests as failed too.
-      if (!$('i' + 1).classList.contains('ok')) {
-        [1,2,3,4].forEach(n => setRow(n, 'bad', n === 1 ? String(err.message || err) : '—'));
-      }
-      setStatus('bad', 'Test failed: ' + (err.message || err));
-      // Show raw response for debugging
-      try {
-        const raw = await fetch(localStorage.getItem(KEY) + '?action=ping').then(r => r.text());
-        setStatus('bad', 'Raw response: ' + raw.slice(0, 240));
-      } catch (_) { /* ignore */ }
-    } finally {
-      runBtn.disabled = false;
-    }
-  }
-})();
-</script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script src="js/ads.js"></script>
 </body>
 </html>
